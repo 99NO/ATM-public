@@ -1,0 +1,566 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define Max 100
+#define name_len 100
+
+void main_menu(void);
+
+void unlock_manager_mode(void);
+void manager_mode(void);
+void manager_inquiry(void);
+void stop_account(void);
+void cancel_stop_account(void);
+
+void client_mode(void);
+void deposit_account(void);
+void withdraw_account(void);
+void client_inquiry(void);
+void create_account(void);
+void transfer_account1(void);
+void transfer_account2(int);
+
+int random_account_num(void);
+
+int account_stop[Max];
+int account_num[Max];
+int account_pass[Max];
+int account_money[Max];
+char account_name[Max][name_len];
+
+
+int count = 0;
+
+int main()
+{
+	for (int i = 0; i < Max; i++)
+	{
+		account_stop[i] = 1;
+		account_money[i] = 0;
+	}
+	main_menu();
+	return 0;
+}
+void main_menu()
+{
+	int select_menu = 0;
+	printf("\n<메인메뉴>\n");
+	printf("1.고객 모드\n2.관리자 모드\n3.종료\n");
+	while (select_menu != 3)
+	{
+		scanf_s("%d", &select_menu);
+		switch (select_menu)
+		{
+		case 1:client_mode(); break;
+		case 2:unlock_manager_mode(); break;
+		case 3:printf("프로그램이 종료됩니다"); break;
+		default:printf("잘못 입력하셨습니다. 다시 입력해주세요."); break;
+		}
+	}
+}
+
+void client_mode()
+{
+	int client_select;
+	printf("<고객 서비스>\n");
+	printf("1.계좌 조회\n2.입금\n3.출금\n4.송금\n5.계좌 개설\n6.뒤로가기\n");
+	scanf_s("%d", &client_select);
+	while (1)
+	{
+		switch (client_select)
+		{
+		case 1:client_inquiry(); break;
+		case 2:deposit_account(); break;
+		case 3:withdraw_account(); break;
+		case 4:transfer_account1(); break;
+		case 5:create_account(); break;
+		case 6:main_menu(); break;
+		default:printf("잘못 입력하셨습니다. 다시 입력해주세요."); break;
+		}
+	}
+}
+
+void unlock_manager_mode()
+{
+	int manager_password = 2020;
+	int password;
+	int attempt;
+	printf("관리자 번호를 입력하십시오.(3회 이상 잘못 입력하시면 메뉴화면으로 돌아갑니다.)\n");
+	for (attempt = 0; attempt < 3; attempt++)
+	{
+		scanf_s("%d", &password);
+		if (password == manager_password)
+		{
+			manager_mode();
+			break;
+		}
+		else
+			printf("잘못입력하셨습니다.(시도횟수%d)\n", attempt + 1);
+	}
+	printf("\n");
+	main_menu();
+}
+
+
+void manager_mode()
+{
+	int manager_select;
+	printf("<관리자 메뉴>\n");
+	printf("1.계좌 조회\n2.계좌 중지\n3.계좌 중지 해제\n");
+	scanf_s("%d", &manager_select);
+	while (1)
+	{
+		switch (manager_select)
+		{
+		case 1:manager_inquiry(); break;
+		case 2:stop_account(); break;
+		case 3:cancel_stop_account(); break;
+		default:printf("잘못 입력하셨습니다. 다시 입력해주세요."); break;
+		}
+	}
+}
+
+int random_account_num()
+{
+	int random_account = 0;
+	srand(time(NULL));
+	for (int i = 0; i < 4; i++)
+	{
+		int random = (rand() % 9) + 1;
+		random_account = (random_account + random) * 10;
+	}
+	random_account = random_account / 10;
+
+	for (int j = 0; j <= count; j++)
+	{
+		if (random_account == account_num[j])
+			random_account_num();
+	}
+
+	return random_account;
+}
+
+
+void create_account(void)
+{
+	printf("\n<계좌 개설>\n");
+	printf("예금주명을 입력하십시오.\n");
+	scanf_s("%s", account_name[count], sizeof(account_name));
+	printf("\n계좌 비밀번호 4자리를 입력하세요.\n");
+	scanf_s("%d", &account_pass[count]);
+	account_num[count] = random_account_num();
+	printf("계좌번호는 %d입니다", account_num[count]);
+	count++;
+	main_menu();
+}
+void deposit_account(void)
+{
+	int num;
+	int deposit_num = -1;
+	printf("\n<입금 서비스>\n");
+	printf("입금하실 계좌번호를 입력하시오:");
+	scanf_s("%d", &num);
+	for (int i = 0; i < Max; i++)
+	{
+		if (num == account_num[i])
+		{
+			deposit_num = i;
+			int attempt = 0;
+			if (account_stop[deposit_num] == 0)
+			{
+				printf("\n해당 계좌는 중지되어 입금이 불가능합니다.\n");
+				printf("메인메뉴로 돌아갑니다.\n");
+				main_menu();
+
+			}
+			printf("\n계좌 비밀번호를 입력하시오.(3회 이상 잘못 입력하시면 계좌가 중지되며 메뉴화면으로 돌아갑니다.)\n");
+			while (attempt < 3)
+			{
+				attempt++;
+				int password;
+				scanf_s("%d", &password);
+				if (password == account_pass[deposit_num])
+					break;
+				else
+					printf("잘못입력하셨습니다.(%d회 오류)\n", attempt);
+			}
+			if (attempt == 3)
+			{
+				printf("계좌가 중지됩니다.\n");
+				printf("메인메뉴로 돌아갑니다\n");
+				account_stop[deposit_num] = 0;
+				main_menu();
+			}
+			break;
+		}
+	}
+	if (deposit_num == -1)
+	{
+		int select = 0;
+		printf("해당하는 계좌가 존재 하지 않습니다.\n");
+		printf("다시 입력하시겠습니까?(1.예 2.아니요)\n");
+		while (1)
+		{
+			scanf_s("%d", &select);
+			switch (select)
+			{
+			case 1: deposit_account(); break;
+			case 2: main_menu(); break;
+			default: printf("잘못 입력하셨습니다. 다시 입력해주세요."); break;
+			}
+		}
+	}
+	else
+	{
+		int deposit_money = 0;
+		printf("\n입급하실 금액을 입력하십시오:");
+		scanf_s("%d", &deposit_money);
+		printf("\n해당 계좌에 %d 원을 입금합니다.\n", deposit_money);
+		account_money[deposit_num] += deposit_money;
+		printf("\n해당 계좌에 잔액은 %d원 입니다.", account_money[deposit_num]);
+	}
+	main_menu();
+}
+void withdraw_account(void)
+{
+	int num;
+	int withdraw_num = -1;
+	printf("\n<출금 서비스>\n");
+	printf("출금하실 계좌번호를 입력하시오:");
+	scanf_s("%d", &num);
+	for (int i = 0; i < Max; i++)
+	{
+		if (num == account_num[i])
+		{
+			withdraw_num = i;
+			int attempt = 0;
+			if (account_stop[withdraw_num] == 0)
+			{
+				printf("\n해당 계좌는 중지되어 출금이 불가능합니다.\n");
+				printf("메인메뉴로 돌아갑니다.\n");
+				main_menu();
+
+			}
+			printf("\n계좌 비밀번호를 입력하시오.(3회 이상 잘못 입력하시면 계좌가 중지되며 메뉴화면으로 돌아갑니다.)\n");
+			while (attempt < 3)
+			{
+				attempt++;
+				int password;
+				scanf_s("%d", &password);
+				if (password == account_pass[withdraw_num])
+					break;
+				else
+					printf("잘못입력하셨습니다.(%d회 오류)\n", attempt);
+			}
+			if (attempt == 3)
+			{
+				printf("계좌가 중지됩니다.\n");
+				printf("메인메뉴로 돌아갑니다\n");
+				account_stop[withdraw_num] = 0;
+				printf("메인메뉴로 돌아갑니다\n");
+				main_menu();
+			}
+			break;
+		}
+	}
+	if (withdraw_num == -1)
+	{
+		int select = 0;
+		printf("해당하는 계좌가 존재 하지 않습니다.\n");
+		printf("다시 입력하시겠습니까?(1.예 2.아니요)\n");
+		while (1)
+		{
+			scanf_s("%d", &select);
+			switch (select)
+			{
+			case 1: withdraw_account(); break;
+			case 2: main_menu(); break;
+			default: printf("잘못 입력하셨습니다. 다시 입력해주세요."); break;
+			}
+		}
+	}
+	else
+	{
+		int withdraw_money = 0;
+		printf("\n출금하실 금액을 입력하십시오:");
+		while (1)
+		{
+			scanf_s("%d", &withdraw_money);
+			if (account_money[withdraw_num] < withdraw_money)
+			{
+				printf("\n계좌에 잔액이 부족합니다.");
+			}
+			else
+			{
+				printf("\n해당 계좌에 %d 원을 출금합니다.\n", withdraw_money);
+				account_money[withdraw_num] -= withdraw_money;
+				printf("\n해당 계좌에 잔액은 %d원 입니다.", account_money[withdraw_num]);
+				break;
+			}
+		}
+	}
+	main_menu();
+}
+void client_inquiry(void)
+{
+	int num;
+	int inquiry_num = -1;
+	printf("\n<고객 계좌 조회 서비스>\n");
+	printf("조회하실 계좌번호를 입력하시오:");
+	scanf_s("%d", &num);
+	for (int i = 0; i < Max; i++)
+	{
+		if (num == account_num[i])
+		{
+			inquiry_num = i;
+			int attempt = 0;
+			printf("\n계좌 비밀번호를 입력하시오.(3회 이상 잘못 입력하시면 메뉴화면으로 돌아갑니다.)\n");
+			while (attempt < 3)
+			{
+				attempt++;
+				int password;
+				scanf_s("%d", &password);
+				if (password == account_pass[inquiry_num])
+					break;
+				else
+					printf("잘못입력하셨습니다.(%d회 오류)\n", attempt);
+			}
+			if (attempt == 3)
+			{
+				printf("메인메뉴로 돌아갑니다\n");
+				main_menu();
+			}
+			break;
+		}
+	}
+	if (inquiry_num == -1)
+	{
+		int select = 0;
+		printf("해당하는 계좌가 존재 하지 않습니다.\n");
+		printf("다시 입력하시겠습니까?(1.예 2.아니요)\n");
+		while (1)
+		{
+			scanf_s("%d", &select);
+			switch (select)
+			{
+			case 1: client_inquiry(); break;
+			case 2: main_menu(); break;
+			default: printf("잘못 입력하셨습니다. 다시 입력해주세요."); break;
+			}
+		}
+	}
+	else
+	{
+		printf("\n****계좌조회****\n");
+		printf("예금주명:%s\n", &account_name[inquiry_num], sizeof(account_name));
+		printf("계좌 잔액:%d\n", account_money[inquiry_num]);
+	}
+	main_menu();
+}
+void transfer_account1(void)
+{
+	printf("<송금 서비스>\n");
+	int num;
+	int transfer_num = -1;
+	printf("본인의 계좌번호를 입력하시오:");
+	scanf_s("%d", &num);
+	for (int i = 0; i < Max; i++)
+	{
+		if (num == account_num[i])
+		{
+			transfer_num = i;
+			int attempt = 0;
+			if (account_stop[transfer_num] == 0)
+			{
+				printf("\n해당 계좌는 중지되어 송금이 불가능합니다.\n");
+				printf("메인메뉴로 돌아갑니다.\n");
+				main_menu();
+
+			}
+			printf("\n계좌 비밀번호를 입력하시오.(3회 이상 잘못 입력하시면 계좌가 중지되며 메뉴화면으로 돌아갑니다.)\n");
+			while (attempt < 3)
+			{
+				attempt++;
+				int password;
+				scanf_s("%d", &password);
+				if (password == account_pass[transfer_num])
+					break;
+				else
+					printf("잘못입력하셨습니다.(%d회 오류)\n", attempt);
+			}
+			if (attempt == 3)
+			{
+				printf("계좌가 중지됩니다.\n");
+				printf("메인메뉴로 돌아갑니다\n");
+				account_stop[transfer_num] = 0;
+				main_menu();
+			}
+			break;
+		}
+	}
+	if (transfer_num == -1)
+	{
+		int select = 0;
+		printf("해당하는 계좌가 존재 하지 않습니다.\n");
+		printf("다시 입력하시겠습니까?(1.예 2.아니요)\n");
+		while (1)
+		{
+			scanf_s("%d", &select);
+			switch (select)
+			{
+			case 1: withdraw_account(); break;
+			case 2: main_menu(); break;
+			default: printf("잘못 입력하셨습니다. 다시 입력해주세요."); break;
+			}
+		}
+	}
+	else
+	{
+		transfer_account2(transfer_num);
+	}
+}
+
+void transfer_account2(int transfer_num)
+{
+	int transfer_account_num = -1;
+	int num2;
+	printf("송금할 계좌의 계좌번호를 입력하시오.");
+	scanf_s("%d", &num2);
+	for (int i = 0; i < Max; i++)
+	{
+		if (num2 == account_num[i])
+		{
+			transfer_account_num = i;
+			break;
+		}
+	}
+	if (transfer_account_num == -1)
+	{
+		int select = 0;
+		printf("해당하는 계좌가 존재 하지 않습니다.\n");
+		printf("다시 입력하시겠습니까?(1.예 2.아니요)\n");
+		while (1)
+		{
+			scanf_s("%d", &select);
+			switch (select)
+			{
+			case 1: transfer_account2(transfer_num); break;
+			case 2: main_menu(); break;
+			default: printf("잘못 입력하셨습니다. 다시 입력해주세요."); break;
+			}
+		}
+	}
+
+	int transfer_money = 0;
+	printf("\n송금하실 금액을 입력하십시오:");
+	while (1)
+	{
+		scanf_s("%d", &transfer_money);
+		if (account_money[transfer_num] < transfer_money)
+		{
+			printf("\n계좌에 잔액이 부족합니다.");
+		}
+		else
+		{
+			printf("\n해당 계좌에서 %d원을 %s님에게 송금 합니다.\n", transfer_money, &account_name[transfer_account_num], sizeof(account_name));
+			account_money[transfer_num] -= transfer_money;
+			account_money[transfer_account_num] += transfer_money;
+			printf("\n고객님의 계좌 잔액은 %d원 입니다.", account_money[transfer_num]);
+			break;
+		}
+	}
+	main_menu();
+}
+
+
+
+void manager_inquiry(void)
+{
+	printf("\n<관리자 계좌 조회>\n");
+	for (int i = 0; i < count; i++)
+	{
+		printf("*********\n");
+		printf("예금주명 %s\n",&account_name[i], sizeof(account_name));
+		printf("계좌번호%d\n", account_num[i]);
+		printf("계좌비밀번호%d\n", account_pass[i]);
+		printf("계좌잔액%d\n", account_money[i]);
+	}
+	main_menu();
+}
+void stop_account(void)
+{
+	printf("\n<계좌 중지>\n");
+	int num;
+	int stop_num = -1;
+	printf("중지하실 계좌번호를 입력하십시오.\n");
+	scanf_s("%d", &num);
+	for (int i = 0; i < Max; i++)
+	{
+		if (num == account_num[i])
+		{
+			stop_num = i;
+			break;
+		}
+	}
+	if (stop_num == -1)
+	{
+		int select = 0;
+		printf("해당하는 계좌가 존재하지 않습니다.");
+		printf("다시 입력하시겠습니까?(1.예 2.아니요)\n");
+		while (1)
+		{
+			scanf_s("%d", &select);
+			switch (select)
+			{
+			case 1: stop_account(); break;
+			case 2: main_menu(); break;
+			default: printf("\n잘못 입력하셨습니다. 다시 입력해주세요."); break;
+			}
+		}
+	}
+	else
+	{
+		printf("\n해당 계좌를 중지합니다");
+		account_stop[stop_num] = 0;
+	}
+	main_menu();
+}
+void cancel_stop_account(void)
+{
+	printf("\n<계좌 중지 해제>\n");
+	int num;
+	int cancel_num = -1;
+	printf("중지를 해제할 계좌번호를 입력하십시오.\n");
+	scanf_s("%d", &num);
+	for (int i = 0; i < Max; i++)
+	{
+		if (num == account_num[i])
+		{
+			cancel_num = i;
+			break;
+		}
+	}
+	if (cancel_num == -1)
+	{
+		int select = 0;
+		printf("해당하는 계좌가 존재하지 않습니다.");
+		printf("다시 입력하시겠습니까?(1.예 2.아니요)\n");
+		while (1)
+		{
+			scanf_s("%d", &select);
+			switch (select)
+			{
+			case 1: cancel_stop_account(); break;
+			case 2: main_menu(); break;
+			default: printf("\n잘못 입력하셨습니다. 다시 입력해주세요."); break;
+			}
+		}
+	}
+	else
+	{
+		printf("해당 계좌 중지상태를 해제합니다\n");
+		account_stop[cancel_num] = 1;
+	}
+	main_menu();
+}
