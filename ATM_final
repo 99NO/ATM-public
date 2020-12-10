@@ -23,12 +23,16 @@ void transfer_account2(int);        // 송금 함수2
 
 int random_account_num(void);       // 계좌 번호 생성 함수
 
+void save();
+void load();
+void exit_ATM();
+
 typedef struct Account {
     int acc_stop;
     int acc_num;
     int acc_pass;
     int acc_money;
-    int acc_name[Max];
+    char acc_name[Max];
 }Account;
 
 FILE* fp;
@@ -36,14 +40,20 @@ Account* accountlist;
 
 
 int count = 0;                      // ATM 이용자 수=계좌 생성 수 
+int save_count;
 
 // 계좌 정보나,계좌 생성 수를 전역 변수로 설정하여 변수 값이 유지 되게 한다.
 
 int main()
 {
+    load();
+
+    save_count = count;
+
     main_menu();                        // 메인 메뉴 함수를 호출하여 프로그램을 시작.     
     return 0;
 }
+
 void main_menu()
 {
     int select_menu = 0;
@@ -56,7 +66,7 @@ void main_menu()
         {
         case 1:client_mode(); break;              // 1번을 입력 받았을 시 client_mode() 즉 고객모드 함수 호출
         case 2:unlock_manager_mode(); break;             // 2번을 입력 받았을 시 client_mode() 관리자모드 함수 호출
-        case 3:printf("프로그램이 종료됩니다"); exit(0); break;           //3번을 입력 받았을 시 exit()함수가 실해되고 프로그램 종료
+        case 3:printf("프로그램이 종료됩니다"); void exit_ATM(); break;           //3번을 입력 받았을 시 exit()함수가 실해되고 프로그램 종료
         default:printf("잘못 입력하셨습니다. 다시 입력해주세요."); break;
         }
     }
@@ -146,17 +156,18 @@ int random_account_num()            //난수를 생성하여 4자리 수 계좌�
 
 void create_account(void)   //계좌 개설 함수
 {
-    accountlist = (Account*)malloc(accountlist, sizeof(Account) * count);
-    accountlist[count].acc_stop = 1;
-    accountlist[count].acc_money = 0;
+    count++;
+    save_count++;
+    accountlist = (Account*)realloc(accountlist, sizeof(Account) * count);
+    accountlist[count-1].acc_stop = 1;
+    accountlist[count-1].acc_money = 0;
     printf("\n<계좌 개설>\n");
     printf("예금주명을 입력하십시오:");
-    scanf("%s", accountlist[count].acc_name);       //account_name[count]에 예금주명을 입력 받는다. 
+    scanf("%s", accountlist[count-1].acc_name);       //account_name[count]에 예금주명을 입력 받는다. 
     printf("\n계좌 비밀번호 4자리를 입력하세요:");
-    scanf("%d", &accountlist[count].acc_pass);                            //account_pass[count]에 계좌 비밀번호를 입력 받는다.
-    accountlist[count].acc_num = random_account_num();                      //random_account_num 함수르 호출하여, 계좌 번호 생성
-    printf("\n계좌번호는 %d입니다\n", accountlist[count].acc_num);  
-    count++;
+    scanf("%d", &accountlist[count-1].acc_pass);                            //account_pass[count]에 계좌 비밀번호를 입력 받는다.
+    accountlist[count-1].acc_num = random_account_num();                      //random_account_num 함수르 호출하여, 계좌 번호 생성
+    printf("\n계좌번호는 %d입니다\n", accountlist[count-1].acc_num);  
     main_menu();
 }
 void deposit_account(void)
@@ -223,8 +234,9 @@ void deposit_account(void)
         scanf("%d", &deposit_money);
         printf("\n해당 계좌에 %d 원을 입금합니다.\n", deposit_money);
         accountlist[deposit_num].acc_money += deposit_money;                            //해당 계좌의 주솟값에 해당하는 account_money즉 계좌 잠액에 입력받은 값을 더한다.
-        printf("\n해당 계좌에 잔액은 %d원 입니다.", accountlist[deposit_num]);               //해당계좌의 잔액을 표시/
+        printf("\n해당 계좌에 잔액은 %d원 입니다.", accountlist[deposit_num].acc_money);               //해당계좌의 잔액을 표시/
     }
+    save();
     main_menu();
 }
 void withdraw_account(void)             //출금 함수 또한 입금 함수와 같은 알고리즘으로 설정.
@@ -300,11 +312,12 @@ void withdraw_account(void)             //출금 함수 또한 입금 함수와 
             {
                 printf("\n해당 계좌에 %d 원을 출금합니다.\n", withdraw_money);
                 accountlist[withdraw_num].acc_money -= withdraw_money;
-                printf("\n해당 계좌에 잔액은 %d원 입니다. %d", accountlist[withdraw_num], withdraw_money);
+                printf("\n해당 계좌에 잔액은 %d원 입니다.", accountlist[withdraw_num].acc_money);
                 break;
             }
         }
     }
+    save();
     main_menu();
 }
 void client_inquiry(void)
@@ -471,10 +484,11 @@ void transfer_account2(int transfer_num)        //송금함수2에서는 돈을 
             printf("\n해당 계좌에서 %d원을 %s님에게 송금 합니다.\n", transfer_money, &accountlist[transfer_account_num].acc_name);    //송금할 금액과 송금 받는 계좌의 예금주 명을 출력
             accountlist[transfer_num].acc_money -= transfer_money;          //돈을 보낸 계좌에서 송금한 돈의 금액을 뺀다.
             accountlist[transfer_account_num].acc_money += transfer_money;          //돈을 받은 계좌에 송금한 금액을 더한다.
-            printf("\n고객님의 계좌 잔액은 %d원 입니다.", accountlist[transfer_num]);     //돈을 보낸 계좌의 잔액을 표시.
+            printf("\n고객님의 계좌 잔액은 %d원 입니다.", accountlist[transfer_num].acc_money);     //돈을 보낸 계좌의 잔액을 표시.
             break;      //돈을 보냈으므로 while문 break
         }
     }
+    save();
     main_menu();
 }
 
@@ -530,6 +544,7 @@ void stop_account(void)
         printf("\n해당 계좌를 중지합니다");
         accountlist[stop_num].acc_stop = 0;         //해당 주솟값에 해당하는 계좌의 중지 상태를 0으로 빠꿈으로서 계좌 중지.
     }
+    save();
     main_menu();
 }
 void cancel_stop_account(void)              //계좌 중지와 같은 알고리즘으로 계좌 중지를 해제.
@@ -568,5 +583,71 @@ void cancel_stop_account(void)              //계좌 중지와 같은 알고리�
         printf("해당 계좌 중지상태를 해제합니다\n");
         accountlist[cancel_num].acc_stop = 1;
     }
+    save();
     main_menu();
+}
+
+
+void load()
+{
+    accountlist = (Account*)malloc(sizeof(Account) * 1);
+
+    fp = fopen("ATM.txt", "rb");
+    if (fp == NULL)
+    {
+        printf("");
+        return;
+    }
+    else
+    {
+        printf("");
+    }
+    fread(&count, sizeof(count), 1, fp);
+    accountlist = realloc(accountlist, sizeof(Account) * count);
+
+    for (int i = 0; i < count; i++)
+    {
+        printf("");
+        fread(&accountlist[i], sizeof(Account), 1, fp);
+    }
+    fclose(fp);
+}
+
+void save()
+{
+    fp = fopen("ATM.txt", "wb");
+    if (fp == NULL)
+    {
+        printf("파일을 열 수 없습니다.\n");
+        exit(1);
+    }
+    else
+    {
+        printf("");
+    }
+
+    fwrite(&count, sizeof(count), 1, fp);
+    for (int i = 0; i < count; i++)
+    {
+        if (accountlist[i].acc_name[0] == NULL)
+        {
+            // 데이터를 저장하지 않고 넘깁니다.
+            continue;
+        }
+        fwrite(&accountlist[i], sizeof(Account), 1, fp);
+    }
+    fclose(fp);
+}
+
+
+
+void exit_ATM()
+{
+    save();
+
+    
+    free(accountlist);
+
+    exit(0);
+   
 }
